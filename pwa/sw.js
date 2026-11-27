@@ -1,7 +1,7 @@
 // Service worker: la app funciona sin conexión.
 // La página se sirve "red primero" (así llegan las actualizaciones) y cae a la caché sin red;
 // el resto (iconos, fuentes) se sirve de caché y se refresca en segundo plano.
-const CACHE = 'fuerza-v1';
+const CACHE = 'fuerza-v2';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
