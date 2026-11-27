@@ -62,7 +62,7 @@ function Shell() {
 
   return (
     <div className="mx-auto min-h-full max-w-[560px]">
-      <main>
+      <main style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {detail ? <SessionDetail key={detail + String(editDetail)} id={detail} startEditing={editDetail} onClose={() => setDetail(null)} /> : (
           <>
             {tab === 'inicio' && <Home go={go} openSession={(id) => openSession(id)} />}
