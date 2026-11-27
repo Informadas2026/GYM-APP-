@@ -1,7 +1,6 @@
 import { db, type Local } from './db';
 import { SEED_EXERCISES } from './seedExercises';
 import { DEFAULT_SETTINGS, type Exercise, type Routine, type Session, type Settings } from '../domain/types';
-import { SEED_ROUTINES } from './seedRoutines';
 import { newId } from '../domain/ids';
 
 type Listener = () => void;
@@ -135,16 +134,6 @@ export async function deleteRoutine(id: string): Promise<void> {
   notify();
 }
 
-/** Carga las rutinas iniciales una sola vez. Con ids fijos y updatedAt 1, cualquier edición posterior gana. */
-export async function seedRoutinesOnce(): Promise<void> {
-  const s = await getSettings();
-  if (s.routinesSeeded) return;
-  await db.transaction('rw', db.routines, async () => {
-    for (const r of SEED_ROUTINES) if (!(await db.routines.get(r.id))) await db.routines.put({ ...r, _dirty: 0 }); // no se envía: cada dispositivo la crea igual
-  });
-  await saveSettings({ routinesSeeded: true });
-}
-
 // ---------- Correcciones de datos (una sola vez) ----------
 
 async function fixOnce(id: string, run: () => Promise<void>) {
@@ -155,16 +144,12 @@ async function fixOnce(id: string, run: () => Promise<void>) {
 }
 
 export async function applyDataFixes(): Promise<void> {
-  // 27/11: el press militar de Olga es con mancuernas.
-  await fixOnce('martes-press-mancuernas', async () => {
-    const r = await db.routines.get('r-martes');
-    if (r && r.items.some((it) => it.exerciseId === 'lib-press-militar')) {
-      await saveRoutine({ ...r, items: r.items.map((it) => (it.exerciseId === 'lib-press-militar' ? { ...it, exerciseId: 'lib-press-hombro-mancuernas' } : it)) });
-    }
-    for (const s of await db.sessions.where('status').equals('done').toArray()) {
-      if (s.deleted || s.routineId !== 'r-martes' || !s.exercises.some((e) => e.exerciseId === 'lib-press-militar')) continue;
-      await saveSession({ ...s, exercises: s.exercises.map((e) => (e.exerciseId === 'lib-press-militar' ? { ...e, exerciseId: 'lib-press-hombro-mancuernas' } : e)) });
-    }
+  // Versiones antiguas cargaban unas rutinas de ejemplo personales (ids r-lunes…r-jueves).
+  // En un dispositivo sin entrenamientos se quitan; donde ya hay entrenos se respetan.
+  // Se borran solo en local (sin marca de borrado), así no se propaga a ninguna copia en la nube.
+  await fixOnce('quitar-rutinas-ejemplo', async () => {
+    const hasWorkouts = (await db.sessions.where('status').equals('done').count()) > 0;
+    if (!hasWorkouts) await db.routines.bulkDelete(['r-lunes', 'r-martes', 'r-miercoles', 'r-jueves']);
   });
   // 27/11: en sesiones guardadas, las series con repeticiones escritas pero sin ✓ cuentan como hechas.
   await fixOnce('series-sin-marcar', async () => {

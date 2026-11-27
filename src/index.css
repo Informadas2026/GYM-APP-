@@ -84,7 +84,7 @@ input[type='number'] { -moz-appearance: textfield; }
 :root[data-palette='oceano'] { --lime: #7cc4ff; --lav: #b9f0d5; }
 :root[data-palette='salvia'] { --lime: #ffb37c; --lav: #c3d7b4; }
 
-/* Eléctrico (propuesta de Olga): blanco frío, carbón, verde menta y azul océano. El azul lleva texto blanco. */
+/* Eléctrico: blanco frío, carbón, verde menta y azul océano. El azul lleva texto blanco. */
 :root[data-palette='electrico'] {
   --lime: #5df9c0; --lav: #d7e8fa; --paper: #f7faff; --hi: #3b1eff; --hi-ink: #ffffff;
   --bg: #e9eff7; --card: #ffffff; --card2: #dde6f2; --fg: #1d2130; --muted: #5d6478; --pill: #262a36; --pill-fg: #eef4fc;

@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { startSync } from './data/sync';
-import { applyDataFixes, seedRoutinesOnce } from './data/repo';
+import { applyDataFixes } from './data/repo';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -11,8 +11,7 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-void seedRoutinesOnce()
-  .then(applyDataFixes)
+void applyDataFixes()
   .catch((e) => console.warn('[inicio]', e))
   .finally(() => void startSync());
 
