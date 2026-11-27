@@ -1,11 +1,11 @@
 // Service worker: la app funciona sin conexión.
 // La página se sirve "red primero" (así llegan las actualizaciones) y cae a la caché sin red;
 // el resto (iconos, fuentes) se sirve de caché y se refresca en segundo plano.
-const CACHE = 'fuerza-v5';
+const CACHE = 'fuerza-v6';
 const CORE = ['./', './index.html', './manifest.webmanifest', './hamster-180.png', './hamster-192.png', './hamster-512.png'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -20,7 +20,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(req).then((res) => {
+      fetch(req, { cache: 'no-store' }).then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put('./index.html', copy));
         return res;
