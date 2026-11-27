@@ -100,14 +100,14 @@ input[type='number'] { -moz-appearance: textfield; }
 }
 
 /* Color de las marcas de los gráficos: el acento principal, oscurecido en modo claro para que contraste sobre blanco. */
-:root { --chart: color-mix(in oklab, var(--lime) 55%, #131313); }
+:root { --chart: color-mix(in oklab, var(--lime) 55%, #131313); --chart-ink: #ffffff; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']):not([data-app-theme='light']) { --chart: var(--lime); }
+  :root:not([data-theme='light']):not([data-app-theme='light']) { --chart: var(--lime); --chart-ink: #131313; }
 }
-:root[data-theme='dark']:not([data-app-theme='light']), :root[data-app-theme='dark'] { --chart: var(--lime); }
-:root[data-palette='electrico'] { --chart: #3b1eff; }
+:root[data-theme='dark']:not([data-app-theme='light']), :root[data-app-theme='dark'] { --chart: var(--lime); --chart-ink: #131313; }
+:root[data-palette='electrico'] { --chart: #3b1eff; --chart-ink: #ffffff; }
 @media (prefers-color-scheme: dark) {
-  :root[data-palette='electrico']:not([data-theme='light']):not([data-app-theme='light']) { --chart: var(--lime); }
+  :root[data-palette='electrico']:not([data-theme='light']):not([data-app-theme='light']) { --chart: var(--lime); --chart-ink: #1d2130; }
 }
 :root[data-palette='electrico'][data-theme='dark']:not([data-app-theme='light']),
-:root[data-palette='electrico'][data-app-theme='dark'] { --chart: var(--lime); }
+:root[data-palette='electrico'][data-app-theme='dark'] { --chart: var(--lime); --chart-ink: #1d2130; }

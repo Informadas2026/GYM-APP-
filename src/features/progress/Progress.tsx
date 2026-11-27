@@ -6,7 +6,7 @@ import {
   activityByDay, bestStreak, goalWeeksStreak, gymPerWeek, improvedExercises, kmPerWeek, periodStart, prsInPeriod,
   runs as runList, strengthHistory, trackedExercises, weekStarts, weeklySetsByMuscle, type Period,
 } from '../../domain/stats';
-import { Bars, Heatmap, Line, RangeBars } from '../../ui/charts';
+import { Bars, Line, RangeBars } from '../../ui/charts';
 import { Segmented } from '../../ui/Sheet';
 
 const GOAL = 4;
@@ -33,6 +33,7 @@ export function Progress() {
   const runsIn = useMemo(() => runList(sessions, from), [sessions, from]);
   const gymTotal = gymWeeks.reduce((a, b) => a + b, 0);
   const kmTotal = runsIn.reduce((a, r) => a + r.km, 0);
+  const repeated = useMemo(() => trackedExercises(sessions).some((t) => t.count > 1), [sessions]);
 
   return (
     <div className="gutter pb-40 pt-8">
@@ -51,7 +52,7 @@ export function Progress() {
           <section className="mt-4 rounded-[36px] bg-lime p-6 text-lime-ink">
             <p className="text-[12px] font-bold uppercase tracking-wider opacity-60">{period === 'todo' ? 'Desde el principio' : period === '1m' ? 'Último mes' : `Últimos ${PERIODS.find((p) => p.value === period)!.label}`}</p>
             <p className="mt-1 font-display text-[24px] font-semibold leading-tight">
-              {improved.length > 0 ? <>Has subido fuerza en {plural(improved.length, 'ejercicio', 'ejercicios')}</> : gymTotal > 0 ? <>Aún sin subidas: sigue sumando sesiones</> : <>Sin entrenos de fuerza en este periodo</>}
+              {improved.length > 0 ? <>Has subido fuerza en {plural(improved.length, 'ejercicio', 'ejercicios')}</> : !repeated ? <>Tu progreso aparecerá cuando repitas tus ejercicios</> : gymTotal > 0 ? <>Mantienes tus marcas. A por la siguiente subida</> : <>Sin entrenos de fuerza en este periodo</>}
             </p>
             {improved.length > 0 && (
               <p className="mt-2 text-[14px] font-medium opacity-75">
@@ -60,7 +61,7 @@ export function Progress() {
             )}
             <div className="mt-4 flex flex-wrap gap-2">
               <Chip>{plural(gymTotal, 'entreno', 'entrenos')}</Chip>
-              <Chip>{plural(prs, 'récord', 'récords')}</Chip>
+              {repeated && <Chip>{plural(prs, 'récord', 'récords')}</Chip>}
               {runsIn.length > 0 && <Chip>{km(kmTotal)} corriendo</Chip>}
             </div>
           </section>
@@ -107,7 +108,6 @@ function Consistency({ weeks, gymWeeks, now }: { weeks: number[]; gymWeeks: numb
   const streak = streakDays(sessions, now);
   const best = bestStreak(sessions);
   const goalStreak = goalWeeksStreak(sessions, GOAL, now);
-  const heatWeeks = weeks.slice(-26);
   const avg = gymWeeks.length ? gymWeeks.reduce((a, b) => a + b, 0) / gymWeeks.length : 0;
 
   return (
@@ -117,12 +117,7 @@ function Consistency({ weeks, gymWeeks, now }: { weeks: number[]; gymWeeks: numb
         <Tile label="Mejor" value={plural(best, 'día', 'días')} sub="racha" />
         <Tile label={`Sem. ${GOAL}+`} value={String(goalStreak)} sub="seguidas" />
       </div>
-      <Heatmap weeks={heatWeeks} ariaLabel="Días entrenados"
-        level={(t) => { const v = byDay.get(dayKey(t)); if (!v) return 0; return v.gym && v.cardio ? 3 : v.gym ? 2 : 1; }}
-        tip={(t) => { const v = byDay.get(dayKey(t)); const parts = [v?.gym ? 'Fuerza' : '', v?.cardio ? 'Cardio' : ''].filter(Boolean); return `${shortDate(t)} · ${parts.length ? parts.join(' + ') : 'Descanso'}`; }} />
-      <div className="mt-1 flex items-center gap-3 text-[12px] text-muted">
-        <Swatch op={0.4} /> Cardio <Swatch op={0.7} /> Fuerza <Swatch op={1} /> Las dos
-      </div>
+      <MonthCalendar byDay={byDay} now={now} />
       <h3 className="mt-5 text-[14px] font-semibold">Entrenos de fuerza por semana <span className="font-normal text-muted">· media {String(Math.round(avg * 10) / 10).replace('.', ',')}</span></h3>
       <Bars values={gymWeeks} labels={weeks.map(shortDate)} goal={GOAL} goalLabel={`Objetivo ${GOAL}`} integer ariaLabel="Entrenos de fuerza por semana"
         format={(v) => String(Math.round(v))}
@@ -131,8 +126,69 @@ function Consistency({ weeks, gymWeeks, now }: { weeks: number[]; gymWeeks: numb
   );
 }
 
-function Swatch({ op }: { op: number }) {
-  return <span className="inline-block h-3 w-3 rounded-[4px] bg-[var(--chart)]" style={{ opacity: op }} />;
+const DOW = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+/** Calendario de un mes: semanas en filas, lunes a domingo en columnas. Las flechas cambian de mes. */
+function MonthCalendar({ byDay, now }: { byDay: Map<string, { gym: number; cardio: number }>; now: number }) {
+  const { sessions } = useAppData();
+  const today = new Date(now);
+  const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1).getTime());
+  const [sel, setSel] = useState<number | null>(null);
+  const d = new Date(month);
+  const firstEver = sessions.filter((s) => s.status === 'done' && !s.deleted).reduce((m, s) => Math.min(m, s.startedAt), now);
+  const canPrev = month > new Date(new Date(firstEver).getFullYear(), new Date(firstEver).getMonth(), 1).getTime();
+  const canNext = month < new Date(today.getFullYear(), today.getMonth(), 1).getTime();
+  const shift = (n: number) => { setSel(null); setMonth(new Date(d.getFullYear(), d.getMonth() + n, 1).getTime()); };
+
+  const lead = (d.getDay() + 6) % 7;
+  const dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(lead).fill(null), ...Array.from({ length: dim }, (_, i) => new Date(d.getFullYear(), d.getMonth(), i + 1, 12).getTime())];
+  while (cells.length % 7) cells.push(null);
+  let gymDays = 0, cardioDays = 0;
+  for (const t of cells) { if (t == null) continue; const v = byDay.get(dayKey(t)); if (v?.gym) gymDays++; if (v?.cardio) cardioDays++; }
+  const title = d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).replace(' de ', ' ');
+  const selInfo = sel != null ? byDay.get(dayKey(sel)) : undefined;
+
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between">
+        <button onClick={() => shift(-1)} disabled={!canPrev} aria-label="Mes anterior" className="grid h-10 w-10 place-items-center rounded-full bg-card2 text-[18px] font-bold disabled:opacity-30">‹</button>
+        <p className="font-display text-[17px] font-semibold first-letter:uppercase">{title}</p>
+        <button onClick={() => shift(1)} disabled={!canNext} aria-label="Mes siguiente" className="grid h-10 w-10 place-items-center rounded-full bg-card2 text-[18px] font-bold disabled:opacity-30">›</button>
+      </div>
+      <div className="mt-3 grid grid-cols-7 gap-y-1.5 text-center" role="grid" aria-label={`Días entrenados en ${title}`}>
+        {DOW.map((x) => <span key={x} className="text-[12px] font-bold text-muted">{x}</span>)}
+        {cells.map((t, i) => {
+          if (t == null) return <span key={'x' + i} />;
+          const v = byDay.get(dayKey(t));
+          const isToday = dayKey(t) === dayKey(now);
+          const future = t > now + 43_200_000;
+          return (
+            <div key={t} className="flex justify-center">
+              <button onClick={() => setSel(sel === t ? null : t)} disabled={future}
+                aria-label={`${new Date(t).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}${v?.gym ? ', fuerza' : ''}${v?.cardio ? ', carrera' : ''}`}
+                className={`relative grid h-10 w-10 place-items-center rounded-full text-[14px] font-semibold
+                  ${v?.gym ? 'bg-[var(--chart)] text-[var(--chart-ink)]' : v?.cardio ? 'ring-2 ring-inset ring-[var(--chart)]' : future ? 'opacity-30' : 'text-muted'}
+                  ${sel === t ? 'outline outline-2 outline-offset-2 outline-[var(--fg)]' : ''}`}>
+                {new Date(t).getDate()}
+                {!!v?.gym && !!v?.cardio && <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[var(--chart)]" aria-hidden="true" />}
+                {isToday && !v && <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[var(--muted)]" aria-hidden="true" />}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-center text-[13px] font-semibold">
+        {sel != null
+          ? `${new Date(sel).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}: ${[selInfo?.gym ? 'fuerza' : '', selInfo?.cardio ? 'carrera' : ''].filter(Boolean).join(' y ') || 'descanso'}`
+          : `${plural(gymDays, 'día', 'días')} de fuerza · ${plural(cardioDays, 'día', 'días')} de carrera`}
+      </p>
+      <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[12px] text-muted">
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-[var(--chart)]" />Fuerza</span>
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full ring-2 ring-inset ring-[var(--chart)]" />Carrera</span>
+      </div>
+    </div>
+  );
 }
 
 /* ---------- 2. Fuerza por ejercicio ---------- */

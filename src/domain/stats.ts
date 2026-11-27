@@ -17,7 +17,10 @@ export function periodStart(period: Period, sessions: Session[], now = Date.now(
   }
   const months = { '1m': 1, '3m': 3, '6m': 6, '1a': 12 }[period];
   d.setMonth(d.getMonth() - months);
-  return startOfWeek(d.getTime());
+  // Nunca antes de tu primera sesión: así las medias no cuentan semanas en las que aún no usabas la app.
+  const list = done(sessions);
+  const first = list.length ? startOfWeek(list.reduce((m, s) => Math.min(m, s.startedAt), now)) : startOfWeek(now);
+  return Math.max(startOfWeek(d.getTime()), first);
 }
 
 /** Lunes de cada semana desde `start` hasta la semana actual (incluida). */
