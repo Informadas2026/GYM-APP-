@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Capas: fondo carbón + tarjetas de color (lima, lavanda, blanco roto). Claro invierte fondo y píldoras. */
+:root {
+  --bg: #ecebe5;
+  --card: #ffffff;
+  --card2: #e0dfd8;
+  --paper: #ffffff;
+  --paper-ink: #131313;
+  --fg: #131313;
+  --muted: #6c6c66;
+  --line: rgba(19, 19, 19, 0.09);
+  --lime: #d9f23c;
+  --lime-ink: #131313;
+  --lav: #b5a5f6;
+  --lav-ink: #131313;
+  --pill: #151515;
+  --pill-fg: #f4f4ef;
+  --hi: var(--lav);
+  --hi-ink: var(--lav-ink);
+  --danger: #d9452b;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-app-theme='light']) {
+    --bg: #0e0e0e; --card: #1b1b1b; --card2: #272727; --paper: #f1f0eb; --paper-ink: #131313;
+    --fg: #f4f4ef; --muted: #9b9b95; --line: rgba(255, 255, 255, 0.09);
+    --pill: #ecebe6; --pill-fg: #131313; --danger: #ff7a5c; color-scheme: dark;
+  }
+}
+:root[data-theme='dark']:not([data-app-theme='light']),
+:root[data-app-theme='dark'] {
+  --bg: #0e0e0e; --card: #1b1b1b; --card2: #272727; --paper: #f1f0eb; --paper-ink: #131313;
+  --fg: #f4f4ef; --muted: #9b9b95; --line: rgba(255, 255, 255, 0.09);
+  --pill: #ecebe6; --pill-fg: #131313; --danger: #ff7a5c; color-scheme: dark;
+}
+:root[data-app-theme='light'] { color-scheme: light; }
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  font-variant-numeric: tabular-nums;
+  overscroll-behavior-y: none;
+}
+body::before {
+  content: ''; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 40; background: var(--bg);
+}
+h1, h2, h3 { text-wrap: balance; }
+.font-display { letter-spacing: -0.01em; }
+button { touch-action: manipulation; }
+:focus-visible { outline: 2px solid var(--lav); outline-offset: 2px; }
+input[type='number']::-webkit-inner-spin-button, input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type='number'] { -moz-appearance: textfield; }
+
+.gutter {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+@keyframes rise { from { transform: translateY(12px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+@keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.anim-rise { animation: rise 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.anim-sheet { animation: sheet 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.anim-pop { animation: pop 0.3s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .anim-rise, .anim-sheet, .anim-pop { animation: none; }
+  * { transition: none !important; }
+}
+
+/* Campos y botones dentro de las tarjetas de color: visibles también sobre blanco. */
+.field { background-color: rgba(255, 255, 255, 0.72); box-shadow: inset 0 0 0 1px rgba(19, 19, 19, 0.09); }
+.field:focus { background-color: #fff; }
+
+/* Combinaciones de acento (Perfil → Colores). --lime = acento principal, --lav = secundario; ambos con texto oscuro encima. */
+:root[data-palette='coral'] { --lime: #ff8a65; --lav: #f5d6b8; }
+:root[data-palette='oceano'] { --lime: #7cc4ff; --lav: #b9f0d5; }
+:root[data-palette='salvia'] { --lime: #ffb37c; --lav: #c3d7b4; }
+
+/* Eléctrico (propuesta de Olga): blanco frío, carbón, verde menta y azul océano. El azul lleva texto blanco. */
+:root[data-palette='electrico'] {
+  --lime: #5df9c0; --lav: #d7e8fa; --paper: #f7faff; --hi: #3b1eff; --hi-ink: #ffffff;
+  --bg: #e9eff7; --card: #ffffff; --card2: #dde6f2; --fg: #1d2130; --muted: #5d6478; --pill: #262a36; --pill-fg: #eef4fc;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='electrico']:not([data-theme='light']):not([data-app-theme='light']) {
+    --bg: #1b1e27; --card: #262a36; --card2: #323746; --paper: #f2f7fd; --fg: #eef4fc; --muted: #9aa3b8; --pill: #d7e8fa; --pill-fg: #1d2130;
+  }
+}
+:root[data-palette='electrico'][data-theme='dark']:not([data-app-theme='light']),
+:root[data-palette='electrico'][data-app-theme='dark'] {
+  --bg: #1b1e27; --card: #262a36; --card2: #323746; --paper: #f2f7fd; --fg: #eef4fc; --muted: #9aa3b8; --pill: #d7e8fa; --pill-fg: #1d2130;
+}
