@@ -7,9 +7,9 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 function pwaHead(): Plugin {
   return {
     name: 'pwa-head',
-    transformIndexHtml: (html) => html.replace('</head>', `    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="./icon-180.png" />
-    <link rel="icon" type="image/png" href="./icon-192.png" />
+    transformIndexHtml: (html) => html.replace('</head>', `    <link rel="manifest" href="./manifest.webmanifest?v=3" />
+    <link rel="apple-touch-icon" href="./hamster-180.png" />
+    <link rel="icon" type="image/png" href="./hamster-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

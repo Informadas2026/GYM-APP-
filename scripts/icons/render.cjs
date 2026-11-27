@@ -1,4 +1,4 @@
-// node render.cjs <svg> [sizes...] -> ../../pwa/icon-<size>.png ; node render.cjs --preview out.png a.svg b.svg c.svg
+// node render.cjs <svg> [sizes...] -> ../../pwa/hamster-<size>.png ; node render.cjs --preview out.png a.svg b.svg c.svg
 const { chromium } = require('playwright'); const fs = require('fs'); const path = require('path');
 const uri = (f) => 'data:image/svg+xml;base64,' + fs.readFileSync(f).toString('base64');
 (async () => {
@@ -11,7 +11,7 @@ const uri = (f) => 'data:image/svg+xml;base64,' + fs.readFileSync(f).toString('b
   } else {
     for (const s of [180, 192, 512]) { const p = await b.newPage({ viewport: { width: s, height: s } });
       await p.setContent(`<style>body{margin:0}</style><img src="${uri(a[0])}" width="${s}" height="${s}">`);
-      await p.screenshot({ path: path.join(__dirname, '../../pwa', `icon-${s}.png`) }); }
+      await p.screenshot({ path: path.join(__dirname, '../../pwa', `hamster-${s}.png`) }); }
   }
   await b.close();
 })();
