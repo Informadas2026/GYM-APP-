@@ -235,7 +235,8 @@ export function paceFrom(durationSec?: number, km?: number): number | undefined 
 /** 5:30 /km */
 export function fmtPace(secPerKm?: number): string {
   if (!secPerKm || !Number.isFinite(secPerKm)) return '—';
-  return `${Math.floor(secPerKm / 60)}:${String(Math.round(secPerKm % 60)).padStart(2, '0')}`;
+  const t = Math.round(secPerKm);
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
 }
 
 /** 1:05:30 o 45:10 */

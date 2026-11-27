@@ -98,3 +98,16 @@ input[type='number'] { -moz-appearance: textfield; }
 :root[data-palette='electrico'][data-app-theme='dark'] {
   --bg: #1b1e27; --card: #262a36; --card2: #323746; --paper: #f2f7fd; --fg: #eef4fc; --muted: #9aa3b8; --pill: #d7e8fa; --pill-fg: #1d2130;
 }
+
+/* Color de las marcas de los gráficos: el acento principal, oscurecido en modo claro para que contraste sobre blanco. */
+:root { --chart: color-mix(in oklab, var(--lime) 55%, #131313); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-app-theme='light']) { --chart: var(--lime); }
+}
+:root[data-theme='dark']:not([data-app-theme='light']), :root[data-app-theme='dark'] { --chart: var(--lime); }
+:root[data-palette='electrico'] { --chart: #3b1eff; }
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='electrico']:not([data-theme='light']):not([data-app-theme='light']) { --chart: var(--lime); }
+}
+:root[data-palette='electrico'][data-theme='dark']:not([data-app-theme='light']),
+:root[data-palette='electrico'][data-app-theme='dark'] { --chart: var(--lime); }
